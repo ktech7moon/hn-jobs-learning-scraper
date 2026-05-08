@@ -1,0 +1,12 @@
+{
+  "comment_text": "Acme Robotics | Senior Backend Engineer | Berlin, Germany | Hybrid (3 days/week in-office) | €90,000 - €120,000 + equity\n\nWe build coffee-fetching robots for tech offices. Backend stack is Python, FastAPI, Postgres, Redis, deployed on AWS via Terraform. ~25 person team, profitable, founder-led.\n\nApply: jobs@acmerobotics.example or hn@acmerobotics.example.",
+  "model_response_json": {
+    "company": "Acme Robotics",
+    "role": "Senior Backend Engineer",
+    "location_text": "Berlin, Germany",
+    "work_mode": "hybrid",
+    "salary_range": "€90,000 - €120,000 + equity",
+    "tech_stack": ["python", "fastapi", "postgres", "redis", "aws", "terraform"],
+    "contact": "jobs@acmerobotics.example"
+  }
+}
