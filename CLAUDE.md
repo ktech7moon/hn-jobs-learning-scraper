@@ -329,4 +329,6 @@ hn-jobs-learning-scraper/
 <!-- Append one bullet per completed slice. Format:
 - YYYY-MM-DD — Slice NN: <name>. See docs/slices/slice-NN-name.md. -->
 
-- _(none yet — scaffolding only)_
+- 2026-05-08 — Slice 01: Naive Playwright scraper. 326 jobs from
+  HN thread 47975571 in 6 min 39 s for $0.4364. See
+  [docs/slices/slice-01-naive.md](docs/slices/slice-01-naive.md).

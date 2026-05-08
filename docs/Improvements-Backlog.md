@@ -9,6 +9,15 @@ don't grow this file into a wishlist.
 
 ## Phase 2 candidates
 
+- **Per-call parallelism on the naive path** — the 6 min 39 s
+  wall-clock on Slice 1's live run is dominated by ~317 sequential
+  Haiku calls at ~1.2 s each. A bounded thread / asyncio pool
+  (e.g. 8–16 in flight) would slash that by an order of magnitude.
+  Deliberately not done in Slice 1: a slow naive path is part of
+  the demo's headline (graduated path looks dramatically faster).
+  TRIGGER: a client requests a "fast naive baseline" or wants the
+  naive path itself to be production-quality, not a foil.
+
 - **Multi-thread support (scrape last 6 months of "Who's Hiring")** —
   TRIGGER: a client asks for trend analysis across multiple months
   in a discovery call.

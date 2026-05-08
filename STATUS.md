@@ -1,20 +1,26 @@
 # hn-jobs-learning-scraper — Status
 
-**Updated:** 2026-05-08 (Slice 1 in flight)
+**Updated:** 2026-05-08 (Slice 1 complete)
 
 ## You are here
-Slice 1 in progress. Naive Playwright scraper is being implemented:
-auto-discovers the latest "Who's Hiring" thread via
-`/submitted?id=whoishiring`, extracts `Job` records via Haiku,
-groups by work_mode in a Markdown digest, captures cost/latency.
+Slice 1 complete and accepted. Naive Playwright path produces a
+real Markdown digest with token-derived cost and wall-clock time.
+Latest live run on HN thread 47975571: 326 jobs in 6 min 39 s for
+$0.4364. Slice writeup at
+[docs/slices/slice-01-naive.md](docs/slices/slice-01-naive.md).
 `browserbase/skills` not yet installed (Slice 2).
 
 ## Next action
-Run `hn-scraper naive` end-to-end against a real HN thread and show
-the user the digest output. No optimization or polish before that
-review.
+Approve Slice 2 plan: Autobrowse learning loop targeting the same
+thread, with the goal of discovering the HN Firebase API and
+graduating a `hn_scraper/skills/who-is-hiring/SKILL.md`.
 
 ## Recent decisions (most recent first)
+- 2026-05-08: `extract_job` returns `list[Job]` so multi-role
+  comments (Haiku occasionally emits a top-level JSON list)
+  fan out to one record per role. Recovered 32 postings on the
+  re-run vs. the first naive run. The whole list is no longer
+  dropped because of one bad element.
 - 2026-05-08: Slice 1 scope locked: thread discovery via Playwright
   on `/submitted?id=whoishiring` (no Algolia — API discovery is
   Slice 2 territory). Job schema includes `tech_stack: list[str]`
