@@ -168,8 +168,39 @@ def _strip_fences(text: str) -> str:
     return s.strip()
 
 
-def extract_job(comment_text: str) -> Job | None:
-    """Send one comment through Haiku; return ``Job`` or ``None`` for non-postings."""
+def _build_job(payload_in: dict, comment_text: str, *, where: str) -> Job | None:
+    """Normalize and validate one posting-shaped dict into a ``Job``.
+
+    Returns ``None`` (with a warning) when the dict represents the
+    ``not_a_posting`` sentinel or fails Pydantic validation. ``where``
+    is used in log messages to disambiguate single-object vs.
+    list-element failures.
+    """
+    if payload_in.get("not_a_posting") is True:
+        return None
+    payload = _normalize_payload(payload_in, raw_text=comment_text)
+    try:
+        return Job(**payload)
+    except ValidationError as exc:
+        _logger.warning("extract_job: validation failed (%s): %s", where, exc)
+        return None
+
+
+def extract_job(comment_text: str) -> list[Job]:
+    """Send one comment through Haiku; return zero, one, or many ``Job`` records.
+
+    Some Who's Hiring comments bundle multiple roles. Haiku
+    occasionally responds with a top-level JSON **list** of posting
+    objects rather than the prescribed single object. We accept that
+    shape and yield one ``Job`` per element so multi-role postings
+    survive instead of being dropped wholesale.
+
+    Returns:
+      - ``[]`` for non-postings, sentinel, or unparseable output.
+      - ``[Job]`` for a single posting object.
+      - ``[Job, ...]`` for a top-level list. Invalid elements are
+        dropped per-element and logged.
+    """
     settings = get_settings()
     system_prompt = load_prompt("extract_job")
     response = llm.call(
@@ -187,29 +218,43 @@ def extract_job(comment_text: str) -> Job | None:
         data = json.loads(raw)
     except json.JSONDecodeError:
         _logger.warning("extract_job: non-JSON output, dropping. preview=%r", raw[:120])
-        return None
+        return []
 
-    if data.get("not_a_posting") is True:
-        return None
+    if isinstance(data, list):
+        out: list[Job] = []
+        for i, element in enumerate(data):
+            if not isinstance(element, dict):
+                _logger.warning(
+                    "extract_job: list element %d is not an object (type=%s), dropping",
+                    i,
+                    type(element).__name__,
+                )
+                continue
+            job = _build_job(element, comment_text, where=f"list[{i}]")
+            if job is not None:
+                out.append(job)
+        return out
 
-    payload = _normalize_payload(data, raw_text=comment_text)
-    try:
-        return Job(**payload)
-    except ValidationError as exc:
-        _logger.warning("extract_job: validation failed: %s", exc)
-        return None
+    if not isinstance(data, dict):
+        _logger.warning(
+            "extract_job: top-level JSON is not object/list (type=%s), dropping",
+            type(data).__name__,
+        )
+        return []
+
+    job = _build_job(data, comment_text, where="single")
+    return [job] if job is not None else []
 
 
 def extract_jobs(comments: Iterable[dict[str, str]]) -> list[Job]:
     jobs: list[Job] = []
     for i, c in enumerate(comments, start=1):
         try:
-            job = extract_job(c["text"])
+            new_jobs = extract_job(c["text"])
         except Exception as exc:
             _logger.warning("extract_job exception on cid=%s: %s", c.get("comment_id"), exc)
             continue
-        if job is not None:
-            jobs.append(job)
+        jobs.extend(new_jobs)
         if i % 20 == 0:
             _logger.info("extract progress: %d candidates processed, %d jobs so far", i, len(jobs))
     return jobs

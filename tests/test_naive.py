@@ -39,18 +39,21 @@ def _isolate_telemetry(tmp_path, monkeypatch):
     config.get_settings.cache_clear()
 
 
-def test_extract_job_happy_path(monkeypatch):
-    expected_json = json.dumps(SAMPLE["model_response_json"])
+def _patch_client(monkeypatch, model_text: str) -> None:
     monkeypatch.setattr(
         llm,
         "_client",
         lambda: SimpleNamespace(
-            messages=SimpleNamespace(create=lambda **_: _fake_response(expected_json))
+            messages=SimpleNamespace(create=lambda **_: _fake_response(model_text))
         ),
     )
 
-    job = naive_scraper.extract_job(SAMPLE["comment_text"])
-    assert job is not None
+
+def test_extract_job_happy_path(monkeypatch):
+    _patch_client(monkeypatch, json.dumps(SAMPLE["model_response_json"]))
+    jobs = naive_scraper.extract_job(SAMPLE["comment_text"])
+    assert len(jobs) == 1
+    job = jobs[0]
     assert job.company == "Acme Robotics"
     assert job.work_mode == "hybrid"
     assert "python" in job.tech_stack
@@ -59,53 +62,67 @@ def test_extract_job_happy_path(monkeypatch):
 
 
 def test_extract_job_not_a_posting(monkeypatch):
-    monkeypatch.setattr(
-        llm,
-        "_client",
-        lambda: SimpleNamespace(
-            messages=SimpleNamespace(create=lambda **_: _fake_response('{"not_a_posting": true}'))
-        ),
-    )
-    assert naive_scraper.extract_job("great list, thanks!") is None
+    _patch_client(monkeypatch, '{"not_a_posting": true}')
+    assert naive_scraper.extract_job("great list, thanks!") == []
 
 
 def test_extract_job_strips_markdown_fences(monkeypatch):
     fenced = "```json\n" + json.dumps(SAMPLE["model_response_json"]) + "\n```"
-    monkeypatch.setattr(
-        llm,
-        "_client",
-        lambda: SimpleNamespace(
-            messages=SimpleNamespace(create=lambda **_: _fake_response(fenced))
-        ),
-    )
-    job = naive_scraper.extract_job(SAMPLE["comment_text"])
-    assert job is not None
-    assert job.company == "Acme Robotics"
+    _patch_client(monkeypatch, fenced)
+    jobs = naive_scraper.extract_job(SAMPLE["comment_text"])
+    assert len(jobs) == 1
+    assert jobs[0].company == "Acme Robotics"
 
 
 def test_extract_job_invalid_work_mode_normalizes(monkeypatch):
     payload = dict(SAMPLE["model_response_json"], work_mode="WhoKnows")
-    monkeypatch.setattr(
-        llm,
-        "_client",
-        lambda: SimpleNamespace(
-            messages=SimpleNamespace(create=lambda **_: _fake_response(json.dumps(payload)))
-        ),
-    )
-    job = naive_scraper.extract_job(SAMPLE["comment_text"])
-    assert job is not None
-    assert job.work_mode == "unspecified"
+    _patch_client(monkeypatch, json.dumps(payload))
+    jobs = naive_scraper.extract_job(SAMPLE["comment_text"])
+    assert len(jobs) == 1
+    assert jobs[0].work_mode == "unspecified"
 
 
-def test_extract_job_garbled_output_returns_none(monkeypatch):
-    monkeypatch.setattr(
-        llm,
-        "_client",
-        lambda: SimpleNamespace(
-            messages=SimpleNamespace(create=lambda **_: _fake_response("sorry I can't help"))
-        ),
+def test_extract_job_garbled_output_returns_empty(monkeypatch):
+    _patch_client(monkeypatch, "sorry I can't help")
+    assert naive_scraper.extract_job("anything") == []
+
+
+def test_extract_job_top_level_list_yields_one_per_element(monkeypatch):
+    base = SAMPLE["model_response_json"]
+    listed = json.dumps(
+        [
+            base,
+            dict(base, company="Beta Robotics", role="SRE", work_mode="remote"),
+            dict(base, company="Gamma Robotics", role="EM", work_mode="onsite"),
+        ]
     )
-    assert naive_scraper.extract_job("anything") is None
+    _patch_client(monkeypatch, listed)
+    jobs = naive_scraper.extract_job("multi-role posting text")
+    assert [j.company for j in jobs] == ["Acme Robotics", "Beta Robotics", "Gamma Robotics"]
+    assert [j.work_mode for j in jobs] == ["hybrid", "remote", "onsite"]
+    # raw_text is the comment, not per-element.
+    assert all(j.raw_text == "multi-role posting text" for j in jobs)
+
+
+def test_extract_job_top_level_list_drops_invalid_elements_only(monkeypatch):
+    base = SAMPLE["model_response_json"]
+    # Mix: valid object, a string (not an object), a sentinel, another valid object.
+    listed = json.dumps(
+        [
+            base,
+            "not an object",
+            {"not_a_posting": True},
+            dict(base, company="Delta Robotics"),
+        ]
+    )
+    _patch_client(monkeypatch, listed)
+    jobs = naive_scraper.extract_job("mixed list")
+    assert [j.company for j in jobs] == ["Acme Robotics", "Delta Robotics"]
+
+
+def test_extract_job_top_level_scalar_returns_empty(monkeypatch):
+    _patch_client(monkeypatch, "42")
+    assert naive_scraper.extract_job("anything") == []
 
 
 def test_compute_run_metrics_filters_by_slice_and_time(_isolate_telemetry, monkeypatch):
