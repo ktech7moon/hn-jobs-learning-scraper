@@ -1,0 +1,43 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets and env
+.env
+.env.local
+
+# Logs and databases
+*.db
+*.log
+
+# Project data — local-only telemetry and digests
+data/*
+!data/.gitkeep
+!data/logs/
+data/logs/*
+!data/logs/.gitkeep
+
+# Throwaway scratch
+scratch/*
+!scratch/.gitkeep
+
+# Sample HTML may contain real HN content; only synthetic, labeled
+# .json or .md fixtures are committed.
+samples/*.html
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Claude Code per-machine local overrides
+.claude/settings.local.json
