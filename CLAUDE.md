@@ -332,3 +332,14 @@ hn-jobs-learning-scraper/
 - 2026-05-08 — Slice 01: Naive Playwright scraper. 326 jobs from
   HN thread 47975571 in 6 min 39 s for $0.4364. See
   [docs/slices/slice-01-naive.md](docs/slices/slice-01-naive.md).
+- 2026-05-08 — Slice 02: Autobrowse learning loop discovered the
+  HN Firebase API and graduated `hn_scraper/skills/who-is-hiring/SKILL.md`.
+  Graduated path on May thread 47975571: 317 jobs in 3 min 43 s
+  for $0.3782 (44% faster, 87% fewer API calls, 13% cheaper than
+  naive). Portability test on April thread 47601859 with no
+  re-learning: 342 jobs in 3 min 33 s for $0.3998. Wall-clock /
+  cost gates from the slice brief did not clear because Anthropic
+  standard-tier rate limits (50 RPM / 30K input-tok-per-min)
+  impose a 3.2-minute floor on this thread size; honest framing
+  in the slice doc projects the higher-tier outcome. See
+  [docs/slices/slice-02-graduated.md](docs/slices/slice-02-graduated.md).
