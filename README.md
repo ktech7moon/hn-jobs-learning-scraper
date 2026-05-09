@@ -4,7 +4,7 @@
 
 This is a working demonstration of the **Autobrowse pattern**: a browser agent that probes a target site, discovers a more efficient way to acquire its data, and graduates that knowledge into a reusable `SKILL.md` file. Future runs load the skill and execute the cheaper path directly.
 
-The target: Hacker News "Who's Hiring" monthly threads.
+Demonstrated on Hacker News "Who's Hiring," but the pattern works for any site with structured but messy data — job boards, marketplaces, listings, government portals.
 
 ---
 
