@@ -28,11 +28,36 @@ LOG_PATH = Path("data/logs/llm_calls.jsonl")
 _client_instance: Anthropic | None = None
 _logger = logging.getLogger(__name__)
 
+# Per-process current run id. Each CLI subcommand calls
+# ``set_current_run_id(uuid.uuid4().hex)`` at startup so every
+# downstream ``llm.call`` is tagged with the same id. ``compare``
+# groups by ``run_id`` to pick the latest run per slice cleanly,
+# avoiding the time-gap heuristic's false grouping of back-to-back
+# CLI invocations that share a slice_label.
+_current_run_id: str | None = None
+
+
+def set_current_run_id(run_id: str | None) -> None:
+    global _current_run_id
+    _current_run_id = run_id
+
+
+def get_current_run_id() -> str | None:
+    return _current_run_id
+
 
 def _client() -> Anthropic:
     global _client_instance
     if _client_instance is None:
-        _client_instance = Anthropic(api_key=get_settings().anthropic_api_key)
+        # max_retries=15 — the graduated path bursts hundreds of
+        # parallel calls and routinely trips Sonnet 4.6's per-org
+        # 50 RPM / 30K input-tokens-per-minute rate limits. The SDK
+        # honors Retry-After headers, so high retries means in-thread
+        # backoff rather than dropped extractions.
+        _client_instance = Anthropic(
+            api_key=get_settings().anthropic_api_key,
+            max_retries=15,
+        )
     return _client_instance
 
 
@@ -70,6 +95,7 @@ def call(
         kwargs["system"] = system
     kwargs.update(extra)
 
+    run_id = _current_run_id
     try:
         response = _client().messages.create(**kwargs)
     except Exception as exc:
@@ -79,6 +105,7 @@ def call(
             "prompt_name": prompt_name,
             "model": model,
             "slice_label": slice_label,
+            "run_id": run_id,
             "input_tokens": None,
             "output_tokens": None,
             "latency_ms": latency_ms,
@@ -106,6 +133,7 @@ def call(
         "prompt_name": prompt_name,
         "model": model,
         "slice_label": slice_label,
+        "run_id": run_id,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "latency_ms": latency_ms,

@@ -186,14 +186,24 @@ def _build_job(payload_in: dict, comment_text: str, *, where: str) -> Job | None
         return None
 
 
-def extract_job(comment_text: str) -> list[Job]:
-    """Send one comment through Haiku; return zero, one, or many ``Job`` records.
+def extract_job(
+    comment_text: str,
+    *,
+    model: str | None = None,
+    slice_label: str = SLICE_LABEL,
+) -> list[Job]:
+    """Send one comment through the LLM; return zero, one, or many ``Job`` records.
 
-    Some Who's Hiring comments bundle multiple roles. Haiku
+    Some Who's Hiring comments bundle multiple roles. The model
     occasionally responds with a top-level JSON **list** of posting
     objects rather than the prescribed single object. We accept that
     shape and yield one ``Job`` per element so multi-role postings
     survive instead of being dropped wholesale.
+
+    Default ``model`` is the cheap tier (Haiku) and ``slice_label`` is
+    ``"naive"`` — Slice 1's baseline. Slice 2's graduated path passes
+    ``model=settings.workhorse_model`` and ``slice_label="graduated"``
+    so quality goes up and cost rolls up under the right slice.
 
     Returns:
       - ``[]`` for non-postings, sentinel, or unparseable output.
@@ -202,11 +212,12 @@ def extract_job(comment_text: str) -> list[Job]:
         dropped per-element and logged.
     """
     settings = get_settings()
+    chosen_model = model or settings.cheap_model
     system_prompt = load_prompt("extract_job")
     response = llm.call(
         prompt_name="extract_job",
-        model=settings.cheap_model,
-        slice_label=SLICE_LABEL,
+        model=chosen_model,
+        slice_label=slice_label,
         system=system_prompt,
         messages=[{"role": "user", "content": comment_text}],
         max_tokens=600,
@@ -244,6 +255,95 @@ def extract_job(comment_text: str) -> list[Job]:
 
     job = _build_job(data, comment_text, where="single")
     return [job] if job is not None else []
+
+
+def extract_jobs_batch(
+    comment_texts: list[str],
+    *,
+    model: str,
+    slice_label: str,
+    max_tokens: int = 4000,
+) -> list[list[Job]]:
+    """Send N comments in one LLM call; return a list of ``Job`` lists, one per input.
+
+    Used by the graduated path to amortize the system-prompt token
+    overhead and stay under the per-organization rate limits. The
+    returned outer list always has length ``len(comment_texts)``;
+    individual entries are ``[]`` for non-postings, missing batch
+    elements, or per-element validation failures.
+    """
+    if not comment_texts:
+        return []
+    out: list[list[Job]] = [[] for _ in comment_texts]
+
+    parts: list[str] = []
+    for i, text in enumerate(comment_texts):
+        parts.append(f'<<<COMMENT id="{i}">>>\n{text}\n<<<END>>>\n')
+    user_payload = "".join(parts)
+
+    system_prompt = load_prompt("extract_jobs_batch")
+    try:
+        response = llm.call(
+            prompt_name="extract_jobs_batch",
+            model=model,
+            slice_label=slice_label,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_payload}],
+            max_tokens=max_tokens,
+        )
+    except Exception as exc:
+        _logger.warning(
+            "extract_jobs_batch: LLM call failed (batch_size=%d): %s",
+            len(comment_texts),
+            exc,
+        )
+        return out
+
+    text_chunks = [
+        block.text for block in response.content if getattr(block, "type", "") == "text"
+    ]
+    raw = _strip_fences("".join(text_chunks))
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        _logger.warning(
+            "extract_jobs_batch: non-JSON output (batch_size=%d). preview=%r",
+            len(comment_texts),
+            raw[:160],
+        )
+        return out
+
+    results = data.get("results") if isinstance(data, dict) else None
+    if not isinstance(results, list):
+        _logger.warning(
+            "extract_jobs_batch: missing 'results' list (batch_size=%d, type=%s)",
+            len(comment_texts),
+            type(results).__name__,
+        )
+        return out
+
+    for entry in results:
+        if not isinstance(entry, dict):
+            continue
+        cid = entry.get("comment_id")
+        if not isinstance(cid, int) or cid < 0 or cid >= len(comment_texts):
+            _logger.warning(
+                "extract_jobs_batch: out-of-range comment_id=%r in batch of %d",
+                cid,
+                len(comment_texts),
+            )
+            continue
+        jobs_raw = entry.get("jobs")
+        if not isinstance(jobs_raw, list):
+            continue
+        comment_text = comment_texts[cid]
+        for j_idx, job_dict in enumerate(jobs_raw):
+            if not isinstance(job_dict, dict):
+                continue
+            job = _build_job(job_dict, comment_text, where=f"batch[cid={cid}][{j_idx}]")
+            if job is not None:
+                out[cid].append(job)
+    return out
 
 
 def extract_jobs(comments: Iterable[dict[str, str]]) -> list[Job]:
