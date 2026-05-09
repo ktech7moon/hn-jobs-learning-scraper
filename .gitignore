@@ -17,12 +17,16 @@ dist/
 *.db
 *.log
 
-# Project data — local-only telemetry and digests
+# Project data — local-only telemetry; digests are published artifacts
 data/*
 !data/.gitkeep
 !data/logs/
 data/logs/*
 !data/logs/.gitkeep
+# Publish digest outputs so README "Real output" links resolve.
+# Telemetry (data/logs/) and learning artifacts (data/learning/) stay local.
+!data/digests/
+!data/digests/*.md
 
 # Throwaway scratch
 scratch/*
