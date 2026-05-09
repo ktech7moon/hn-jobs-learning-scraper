@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "skills": {
+    "autobrowse": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/autobrowse/SKILL.md",
+      "computedHash": "0c0240c8064cb5e70b0e8f55dc7b40e2414b455b437bbebfa0a572eeb0e5d852"
+    },
+    "browser": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/browser/SKILL.md",
+      "computedHash": "185121607995b1bc9fe16658060d90cff11895b3870946a4d26f1f5ccb43f8b5"
+    },
+    "browser-trace": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/browser-trace/SKILL.md",
+      "computedHash": "6fb2478e33ad6e8a658846398c2cc46239095730606c3e5ce60ba81e0fd8821d"
+    },
+    "browserbase-cli": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/browserbase-cli/SKILL.md",
+      "computedHash": "c87248a150ce56cee88b0159dc2f9e5bd56fa32f5aa7acad1c187705f0c003da"
+    },
+    "company-research": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/company-research/SKILL.md",
+      "computedHash": "8eeab3523d5e32179c3791a747e97e717fd01a28fe627844aff1c64843788631"
+    },
+    "cookie-sync": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cookie-sync/SKILL.md",
+      "computedHash": "cd377a90e4b4944aefd274e7a415be0b1e82d42720d2e1bf0fdd83b198e4b3ea"
+    },
+    "event-prospecting": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/event-prospecting/SKILL.md",
+      "computedHash": "b1baa35bce25fd00c901afd76e5a1d1cc5121684fdd76c3c8e73795ac3c2b72c"
+    },
+    "fetch": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/fetch/SKILL.md",
+      "computedHash": "ad393697e617d455abe018da82bdc313d1cc0cd258aaeb2cbe6b0058cbb247c4"
+    },
+    "functions": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/functions/SKILL.md",
+      "computedHash": "8dedb2d26f6928088d71a4a84796795d6b2f46d824c2134cc105c0458e43a0e9"
+    },
+    "safe-browser": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/safe-browser/SKILL.md",
+      "computedHash": "90e1d7515eb5146fc5a39684dd2528c37be19463da777d9bc5e95d46448243ec"
+    },
+    "search": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/search/SKILL.md",
+      "computedHash": "42bb13d897cf61485b9ee40f02e3affc4affd702c06f7e84f13f8e3547db0c48"
+    },
+    "ui-test": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-test/SKILL.md",
+      "computedHash": "c5db04f3d92b57fc419c600e554853abe8079e97bc884e09adec8c0dda77b2a2"
+    },
+    "what-antibot": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "skillPath": "skills/what-antibot/SKILL.md",
+      "computedHash": "41fa0ea180dd5c522fd1110d7620911cd217a6ba4580711445674ea2be0717a8"
+    }
+  }
+}
