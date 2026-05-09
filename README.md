@@ -4,7 +4,7 @@
 
 This is a working demonstration of the **Autobrowse pattern**: a browser agent that probes a target site, discovers a more efficient way to acquire its data, and graduates that knowledge into a reusable `SKILL.md` file. Future runs load the skill and execute the cheaper path directly.
 
-Demonstrated on Hacker News "Who's Hiring," but the pattern works for any site with structured but messy data — job boards, marketplaces, listings, government portals.
+The target: Hacker News "Who's Hiring" monthly threads.
 
 ---
 
@@ -159,6 +159,7 @@ Each run writes per-call telemetry to `data/logs/llm_calls.jsonl` — one line p
 
 The three-tier model routing (Haiku for grunt, Sonnet for reasoning, Opus for centerpiece artifacts) is documented in [`CLAUDE.md`](CLAUDE.md).
 
+The architecture is vendor-agnostic by design. All LLM calls go through a single wrapper module ([`hn_scraper/llm.py`](hn_scraper/llm.py)) — swapping in OpenAI, xAI Grok, Google Gemini, or a local model is a small diff confined to that one file, and the cost-tracking telemetry carries over unchanged.
 ---
 
 ## Engineering principles this project demonstrates
