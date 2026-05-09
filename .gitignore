@@ -41,3 +41,11 @@ samples/*.html
 
 # Claude Code per-machine local overrides
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/skills/
+
+# Browserbase / agentskills installs (npx skills add ...) — local tool, not project source
+.agents/
+
+# Autobrowse training workspace — created by the learning loop, contains run-specific artifacts
+autobrowse/
