@@ -1,6 +1,6 @@
 ---
 name: who-is-hiring
-description: Scrapes monthly "Ask HN: Who is hiring?" threads into clean per-posting plain text, ready for an extraction LLM. Use when given an HN hiring thread (id or URL), or trigger phrases like "who is hiring", "HN jobs", "Ask HN hiring thread", "scrape HN hiring".
+description: 'Scrapes monthly "Ask HN: Who is hiring?" threads into clean per-posting plain text, ready for an extraction LLM. Use when given an HN hiring thread (id or URL), or trigger phrases like "who is hiring", "HN jobs", "Ask HN hiring thread", "scrape HN hiring".'
 ---
 
 # who-is-hiring
