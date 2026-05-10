@@ -47,3 +47,21 @@ don't grow this file into a wishlist.
 
 - **Production deployment (cloud, container, etc.)** — TRIGGER: the
   project leaves "runs on my laptop" status and is sold as a service.
+
+---
+
+## Open issues
+
+- **Telemetry accounting: digest header vs `hn-scraper compare` disagree
+  on graduated runs.** Same May v3 graduated run reports different
+  numbers in two places: the digest header at
+  `data/digests/47975571-graduated.md` says **$0.3462 / 40 calls**, and
+  `hn-scraper compare` says **$0.3782 / 41 calls**. Gap is 1 call /
+  $0.0320. Root cause unknown — likely different scoping (digest
+  may count extraction-only calls; compare may include the Opus
+  digest-header-polish call and/or one extra row) but not verified.
+  ACTION: trace which calls each path includes, pick a canonical
+  truth, regenerate the digest or annotate the discrepancy.
+  TRIGGER: Slice 3 polish pass — the README and Loom both quote one
+  of these numbers, so they must agree before the repo is publicized
+  more widely.

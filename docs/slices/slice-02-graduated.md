@@ -399,3 +399,7 @@ account tier supports; the architecture is right.
   that batched extraction is the default; the batch prompt's
   larger `max_tokens=4000` makes it less likely to recur.
 - **Live integration test** behind a pytest marker (item 4 above).
+- **Reconcile digest-header vs `hn-scraper compare` cost numbers** —
+  the May v3 graduated digest header reports $0.3462 / 40 calls;
+  `hn-scraper compare` reports $0.3782 / 41 calls for the same run.
+  See [Improvements-Backlog → Telemetry accounting](../Improvements-Backlog.md#open-issues).
