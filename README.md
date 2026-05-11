@@ -2,6 +2,8 @@
 
 > An AI agent that learns a website, then teaches future runs to skip the hard part.
 
+> 🎬 **[Watch the 4-minute walkthrough →](https://www.loom.com/share/72efd49f23ee478c8962e72c7ede7084)**
+
 This is a working demonstration of the **Autobrowse pattern**: a browser agent that probes a target site, discovers a more efficient way to acquire its data, and graduates that knowledge into a reusable `SKILL.md` file. Future runs load the skill and execute the cheaper path directly.
 
 The target: Hacker News "Who's Hiring" monthly threads.
